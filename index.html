@@ -8,8 +8,10 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Font Awesome for Slick Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- pdf-lib for decrypting and compiling PDF files client-side -->
+    <script src="https://unpkg.com/pdf-lib/dist/pdf-lib.min.js"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;700&display=swap');
         
         :root {
             --neon-blue: #00f2ff;
@@ -76,6 +78,11 @@
         .glow-button:hover::before {
             left: 100%;
         }
+
+        /* Terminal Font styling */
+        .terminal-font {
+            font-family: 'JetBrains Mono', 'Courier New', monospace;
+        }
     </style>
 </head>
 <body class="text-slate-100 min-h-screen flex flex-col justify-between">
@@ -134,6 +141,11 @@
                         <button onclick="switchTab('insurance', this)" class="sidebar-link w-full flex items-center gap-3.5 py-3 px-4 rounded-xl text-slate-400 hover:text-white transition-all text-left">
                             <i class="fa-solid fa-shield-halved text-rose-400"></i>
                             <span class="text-sm font-semibold">Insurance</span>
+                        </button>
+                        <!-- Password Cracker Button -->
+                        <button onclick="switchTab('pass-cracker', this)" class="sidebar-link w-full flex items-center gap-3.5 py-3 px-4 rounded-xl text-slate-400 hover:text-white transition-all text-left">
+                            <i class="fa-solid fa-unlock-keyhole text-yellow-400"></i>
+                            <span class="text-sm font-semibold">Password Cracker</span>
                         </button>
                     </div>
                 </div>
@@ -381,6 +393,95 @@
                 </div>
             </div>
 
+            <!-- SECTION 5: PASSWORD CRACKER TAB -->
+            <div id="pass-cracker" class="tab-content hidden animate-in fade-in duration-300">
+                <header class="mb-10">
+                    <div class="inline-flex items-center gap-2 px-3 py-1 bg-yellow-500/10 text-yellow-400 text-xs font-bold rounded-full border border-yellow-500/20 mb-3 uppercase tracking-wider">
+                        <i class="fa-solid fa-unlock-keyhole"></i> Decryption Module
+                    </div>
+                    <h2 class="text-3xl lg:text-4xl font-black text-white tracking-tight">Smart PDF Password Recovery</h2>
+                    <p class="text-slate-400 mt-2 max-w-xl text-sm font-light">Protected PDF upload karein aur target prefix base combinations se decryption bypass execute karein.</p>
+                </header>
+
+                <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+                    <!-- Control Settings Panel -->
+                    <div class="lg:col-span-5 space-y-6">
+                        <div class="premium-card p-6 rounded-3xl border border-slate-800 flex flex-col justify-between">
+                            <div class="space-y-5">
+                                <h3 class="text-lg font-bold text-white flex items-center gap-2">
+                                    <i class="fa-solid fa-gears text-yellow-400"></i> Attack Parameters
+                                </h3>
+                                
+                                <div class="border-2 border-dashed border-slate-700 rounded-2xl p-6 text-center hover:border-yellow-500/50 transition-all cursor-pointer bg-slate-950/40" onclick="document.getElementById('crack-pdf-input').click()">
+                                    <i class="fa-solid fa-file-pdf text-4xl text-red-500 mb-3"></i>
+                                    <p class="text-xs font-bold text-slate-300" id="crack-file-status">SELECT PROTECTED PDF</p>
+                                    <span class="text-[9px] text-slate-500 block mt-1">(Real PDF-Lib Decryption)</span>
+                                    <input type="file" id="crack-pdf-input" class="hidden" accept="application/pdf" onchange="updateCrackStatus(this)">
+                                </div>
+
+                                <div class="space-y-1">
+                                    <label class="text-[10px] font-bold text-slate-500 uppercase ml-1">Target Name Hint (e.g., AMAR / VIKAS)</label>
+                                    <input type="text" id="crack-hint" placeholder="Vikasmishra" class="w-full bg-slate-900 border border-slate-800 rounded-xl p-4 text-sm font-mono text-yellow-400 outline-none focus:border-yellow-500">
+                                </div>
+
+                                <div class="flex items-center gap-3 bg-yellow-500/5 p-4 rounded-xl border border-yellow-500/10">
+                                    <i class="fa-solid fa-circle-info text-yellow-500 text-sm"></i>
+                                    <p class="text-[10px] text-yellow-200/80 leading-relaxed font-light">
+                                        System apke hint ke pehle 4 character lekar automatically Capital aur Small prefixes generate karega (Jaise: AMAR, amar) aur sequential batch range trial run karega.
+                                    </p>
+                                </div>
+                            </div>
+
+                            <div class="pt-6 mt-4">
+                                <button id="crack-start-btn" onclick="toggleCracker()" class="w-full bg-gradient-to-r from-yellow-500 to-orange-600 hover:from-yellow-400 hover:to-orange-500 text-slate-950 font-black py-4 rounded-2xl transition duration-300 flex items-center justify-center gap-2 border border-yellow-500/30 shadow-lg shadow-yellow-500/10 uppercase tracking-wider text-xs">
+                                    <i class="fa-solid fa-bullseye"></i> Launch Attack Engine
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Console/Terminal Area -->
+                    <div class="lg:col-span-7 flex flex-col">
+                        <div class="premium-card p-6 rounded-3xl border border-slate-800 flex flex-col flex-grow min-h-[450px]">
+                            <div class="flex justify-between items-center mb-4">
+                                <span class="text-xs font-black uppercase text-yellow-500 tracking-widest flex items-center gap-2">
+                                    <span class="w-2 h-2 bg-yellow-400 rounded-full animate-ping"></span> Live Execution Log
+                                </span>
+                                <div class="flex gap-2">
+                                    <div class="w-3 h-3 rounded-full bg-red-500/70"></div>
+                                    <div class="w-3 h-3 rounded-full bg-yellow-500/70"></div>
+                                    <div class="w-3 h-3 rounded-full bg-green-500/70"></div>
+                                </div>
+                            </div>
+                            
+                            <!-- Hacker-style terminal screen -->
+                            <div id="crack-terminal" class="terminal-font text-[11px] bg-black/90 p-4 rounded-2xl border border-slate-800/80 h-72 overflow-y-auto leading-relaxed text-emerald-400 flex-grow shadow-inner">
+                                [SYSTEM] Decryption socket channel initialized...<br>
+                                [SYSTEM] Awaiting locked target parameter injection...
+                            </div>
+
+                            <div class="grid grid-cols-2 gap-4 mt-4">
+                                <div class="bg-slate-900/80 p-3 rounded-xl border border-slate-800 text-center">
+                                    <span class="text-[10px] text-slate-500 block font-bold uppercase tracking-wider">Attempts</span>
+                                    <span id="crack-count" class="text-xl font-black text-cyan-400 tracking-tighter">0</span>
+                                </div>
+                                <div class="bg-slate-900/80 p-3 rounded-xl border border-slate-800 text-center">
+                                    <span class="text-[10px] text-slate-500 block font-bold uppercase tracking-wider">Engine State</span>
+                                    <span id="crack-status" class="text-xl font-black text-yellow-500 tracking-tighter uppercase">IDLE</span>
+                                </div>
+                            </div>
+
+                            <!-- Download Button Container (Shows on cracking success) -->
+                            <div id="download-container" class="hidden mt-4 pt-3 border-t border-slate-800">
+                                <button onclick="downloadUnlockedPDF()" class="w-full bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-slate-950 font-black py-4 rounded-2xl transition duration-300 flex items-center justify-center gap-2 border border-emerald-500/30 shadow-lg shadow-emerald-500/10 uppercase tracking-widest text-xs">
+                                    <i class="fa-solid fa-file-arrow-down text-base"></i> Download Unlocked PDF
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
         </main>
     </div>
 
@@ -456,6 +557,191 @@
                 sidebar.classList.remove('translate-x-0');
                 sidebar.classList.add('-translate-x-full');
             }
+        }
+
+        // ==========================================
+        // PASSWORD CRACKER ENGINE (REAL PDF-LIB BYPASS)
+        // ==========================================
+        let isCracking = false;
+        let crackTargetBuffer = null;
+        let unlockedBlob = null;
+        let attemptTask = null;
+
+        const COMMON_INDIAN_NAMES = [
+            "VIKA", "AMIT", "SONU", "RAHU", "ANIL", "SUNY", "MUKU", "RAJU", "SURJ", "DIPU", 
+            "MANT", "SURA", "NEER", "DEEP", "PANK", "AKAS", "SAHI", "ROHI", "PIYU", "AMAN",
+            "ARUN", "AJAY", "VIJY", "KAPL", "MANJ", "SANT", "RAJK", "BABL", "CHOT", "VISH"
+        ];
+
+        function logToTerminal(msg, colorClass = '') {
+            const terminal = document.getElementById('crack-terminal');
+            const span = document.createElement('div');
+            if (colorClass) {
+                span.className = colorClass;
+            }
+            span.innerHTML = `> ${msg}`;
+            terminal.appendChild(span);
+            terminal.scrollTop = terminal.scrollHeight;
+        }
+
+        function updateCrackStatus(input) {
+            const file = input.files[0];
+            if (file) {
+                document.getElementById('crack-file-status').innerText = "TARGET PDF LOCKED: " + file.name.substring(0, 20).toUpperCase();
+                
+                // Read PDF file into memory buffer
+                const reader = new FileReader();
+                reader.onload = function() {
+                    crackTargetBuffer = new Uint8Array(this.result);
+                    logToTerminal(`File loaded: [${file.name}] ready for decrypt payload.`, 'text-cyan-400');
+                };
+                reader.readAsArrayBuffer(file);
+            }
+        }
+
+        function toggleCracker() {
+            if (isCracking) {
+                stopCracking();
+            } else {
+                startCracking();
+            }
+        }
+
+        function stopCracking() {
+            isCracking = false;
+            if (attemptTask) {
+                cancelAnimationFrame(attemptTask);
+                attemptTask = null;
+            }
+            document.getElementById('crack-start-btn').innerHTML = `<i class="fa-solid fa-bullseye"></i> Launch Attack Engine`;
+            document.getElementById('crack-status').innerText = "IDLE";
+            document.getElementById('crack-status').className = "text-xl font-black text-yellow-500 tracking-tighter uppercase";
+            logToTerminal("Brute-force processing aborted by user.", "text-red-400 font-bold");
+        }
+
+        async function startCracking() {
+            const hint = document.getElementById('crack-hint').value.trim();
+            const terminal = document.getElementById('crack-terminal');
+            
+            if (!crackTargetBuffer) {
+                alert("Pehle locked PDF file upload karein!");
+                return;
+            }
+
+            // Prep prefixes based on user hint (Minimum 4 character extraction logic)
+            let prefixes = [];
+            if (hint.length >= 4) {
+                const sub = hint.substring(0, 4);
+                prefixes.push(sub.toUpperCase());
+                prefixes.push(sub.toLowerCase());
+            }
+
+            // Fallback default Indian Names database in uppercase & lowercase
+            COMMON_INDIAN_NAMES.forEach(name => {
+                prefixes.push(name.toUpperCase());
+                prefixes.push(name.toLowerCase());
+            });
+
+            // Remove any potential duplicates safely
+            prefixes = [...new Set(prefixes)];
+
+            isCracking = true;
+            document.getElementById('crack-start-btn').innerHTML = `<i class="fa-solid fa-circle-stop"></i> Stop Attack Engine`;
+            document.getElementById('crack-status').innerText = "ATTACKING";
+            document.getElementById('crack-status').className = "text-xl font-black text-cyan-400 tracking-tighter uppercase animate-pulse";
+            document.getElementById('download-container').classList.add('hidden');
+            
+            terminal.innerHTML = ""; // Clear log
+            logToTerminal("Booting Algorithmic PDF-Lib Recovery Module...", "text-yellow-400 font-bold");
+            logToTerminal(`Target Prefix List: [${prefixes.slice(0, 5).join(", ")}...]`, "text-slate-400");
+            
+            let totalAttempts = 0;
+            let currentPrefixIdx = 0;
+            let currentSuffixVal = 0;
+
+            const batchSize = 120; // Number of combinations evaluated per animation tick to avoid freezing UI
+            
+            async function processBatch() {
+                if (!isCracking) return;
+
+                if (currentPrefixIdx >= prefixes.length) {
+                    logToTerminal("Brute force failed: Target combinations exhausted without decryption match.", "text-red-500 font-bold");
+                    stopCracking();
+                    document.getElementById('crack-status').innerText = "FAILED";
+                    document.getElementById('crack-status').className = "text-xl font-black text-red-500 tracking-tighter uppercase";
+                    return;
+                }
+
+                const prefix = prefixes[currentPrefixIdx];
+                let isBatchMatchFound = false;
+
+                // Test a batch sequentially
+                for (let k = 0; k < batchSize; k++) {
+                    const padValue = currentSuffixVal.toString().padStart(4, '0');
+                    const passAttempt = prefix + padValue;
+                    totalAttempts++;
+
+                    // Update UI stats periodically
+                    if (totalAttempts % 10 === 0) {
+                        document.getElementById('crack-count').innerText = totalAttempts;
+                    }
+
+                    if (totalAttempts % 250 === 0) {
+                        logToTerminal(`Attempting range: [${passAttempt}] -> Refused`, "text-slate-500");
+                    }
+
+                    // Try loading PDF with the computed candidate password using PDFLib
+                    try {
+                        const pdfDoc = await PDFLib.PDFDocument.load(crackTargetBuffer, { password: passAttempt });
+                        
+                        // If load succeeds, decryption has passed!
+                        isBatchMatchFound = true;
+                        isCracking = false;
+                        
+                        logToTerminal(`🔓 SUCCESS! ENCRYPTION BYPASSED SUCCESSFULLY`, "text-green-400 font-bold");
+                        logToTerminal(`DECRYPTED PASSWORD KEY FOUND: [${passAttempt}]`, "text-green-400 font-extrabold text-sm tracking-wider");
+                        logToTerminal("Exporting decrypted PDF stream to local disk buffers...", "text-slate-300");
+
+                        // Save the unlocked document stream
+                        const savedBytes = await pdfDoc.save();
+                        unlockedBlob = new Blob([savedBytes], { type: 'application/pdf' });
+
+                        document.getElementById('crack-status').innerText = "CRACKED";
+                        document.getElementById('crack-status').className = "text-xl font-black text-emerald-500 tracking-tighter uppercase";
+                        document.getElementById('crack-start-btn').innerHTML = `<i class="fa-solid fa-bullseye"></i> Launch Attack Engine`;
+                        document.getElementById('download-container').classList.remove('hidden');
+                        break;
+                    } catch (err) {
+                        // PDF-Lib throws an error if decryption/password match fails, skip and keep checking
+                    }
+
+                    currentSuffixVal++;
+                    if (currentSuffixVal > 9999) {
+                        currentSuffixVal = 0;
+                        currentPrefixIdx++;
+                        break;
+                    }
+                }
+
+                if (!isBatchMatchFound && isCracking) {
+                    attemptTask = requestAnimationFrame(processBatch);
+                }
+            }
+
+            // Start the non-blocking engine loop
+            attemptTask = requestAnimationFrame(processBatch);
+        }
+
+        function downloadUnlockedPDF() {
+            if (!unlockedBlob) return;
+            const url = URL.createObjectURL(unlockedBlob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = "Decrypted_Vikas_Portal.pdf";
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
         }
     </script>
 </body>
