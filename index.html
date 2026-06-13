@@ -423,6 +423,22 @@
                             Instant Check <i class="fa-solid fa-arrow-up-right-from-square text-xs"></i>
                         </button>
                     </div>
+
+                    <!-- Option 6: Gadi Fitness (AFMS) -->
+                    <div class="premium-card p-6 rounded-3xl flex flex-col justify-between">
+                        <div>
+                            <div class="w-12 h-12 rounded-2xl bg-cyan-500/10 text-cyan-400 flex items-center justify-center text-xl mb-4 border border-cyan-500/20">
+                                <i class="fa-solid fa-screwdriver-wrench"></i>
+                            </div>
+                            <h3 class="text-lg font-bold text-white mb-2">Gadi Fitness (AFMS)</h3>
+                            <p class="text-xs text-slate-400 mb-6 leading-relaxed">
+                                Official Vahan AFMS system se gaadi ka fitness certificate apply, check aur download karein.
+                            </p>
+                        </div>
+                        <button onclick="openService('https://vahan.parivahan.gov.in/AFMS/#/', 'Fitness_Portal')" class="glow-button w-full bg-gradient-to-r from-cyan-500/80 to-blue-600/80 hover:from-cyan-400 hover:to-blue-500 text-slate-950 font-bold py-3 px-4 rounded-xl transition duration-300 flex items-center justify-center gap-2 border border-cyan-500/30">
+                            Check Fitness Status <i class="fa-solid fa-arrow-up-right-from-square text-xs"></i>
+                        </button>
+                    </div>
                 </div>
             </div>
 
@@ -665,15 +681,15 @@
         function setInterestType(type) {
             selectedInterestType = type;
             const btnFlat = document.getElementById('int-flat');
-            const btnReducing = document.getElementById('int-reducing');
+            const btnCapital = document.getElementById('int-reducing'); // reducing
             const roiLabel = document.getElementById('roi-label');
 
             if(type === 'flat') {
                 btnFlat.className = "flex-grow py-2.5 px-3 text-xs font-bold rounded-xl border border-yellow-500 bg-yellow-500/10 text-yellow-400 transition-all";
-                btnReducing.className = "flex-grow py-2.5 px-3 text-xs font-bold rounded-xl border border-slate-800 text-slate-400 transition-all";
+                btnCapital.className = "flex-grow py-2.5 px-3 text-xs font-bold rounded-xl border border-slate-800 text-slate-400 transition-all";
                 roiLabel.innerText = "Flat Rate (%)";
             } else {
-                btnReducing.className = "flex-grow py-2.5 px-3 text-xs font-bold rounded-xl border border-yellow-500 bg-yellow-500/10 text-yellow-400 transition-all";
+                btnCapital.className = "flex-grow py-2.5 px-3 text-xs font-bold rounded-xl border border-yellow-500 bg-yellow-500/10 text-yellow-400 transition-all";
                 btnFlat.className = "flex-grow py-2.5 px-3 text-xs font-bold rounded-xl border border-slate-800 text-slate-400 transition-all";
                 roiLabel.innerText = "Reducing Balance (%)";
             }
@@ -927,7 +943,7 @@
 
                 doc.setFont("helvetica", "italic");
                 doc.setFontSize(7.5);
-                doc.text(`* This is a computer-generated quotation based on ${typeText.toLowerCase()}.`, 43, 256);
+                doc.text(`* This is a computer-generated quotation based on {typeText.toLowerCase()}.`, 43, 256);
 
                 // Corporate Signatures
                 doc.setFont("helvetica", "bold");
