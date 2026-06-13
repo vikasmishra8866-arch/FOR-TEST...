@@ -130,6 +130,11 @@
                             <i class="fa-solid fa-file-arrow-down text-purple-400"></i>
                             <span class="text-sm font-semibold">Document Download</span>
                         </button>
+                        <!-- Insurance Section Button -->
+                        <button onclick="switchTab('insurance', this)" class="sidebar-link w-full flex items-center gap-3.5 py-3 px-4 rounded-xl text-slate-400 hover:text-white transition-all text-left">
+                            <i class="fa-solid fa-shield-halved text-rose-400"></i>
+                            <span class="text-sm font-semibold">Insurance</span>
+                        </button>
                     </div>
                 </div>
             </div>
@@ -326,6 +331,51 @@
                         </div>
                         <button onclick="openService('https://bps.dgvcl.co.in/BillDetail/index.php', 'DGVCL_Portal')" class="glow-button w-full bg-gradient-to-r from-sky-500/80 to-blue-600/80 hover:from-sky-400 hover:to-blue-500 text-slate-950 font-bold py-3.5 px-4 rounded-2xl transition duration-300 flex items-center justify-center gap-2 border border-sky-500/30 shadow-lg shadow-sky-500/10">
                             Download Bill <i class="fa-solid fa-arrow-up-right-from-square text-xs"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SECTION 4: INSURANCE TAB -->
+            <div id="insurance" class="tab-content hidden animate-in fade-in duration-300">
+                <header class="mb-10">
+                    <div class="inline-flex items-center gap-2 px-3 py-1 bg-rose-500/10 text-rose-400 text-xs font-bold rounded-full border border-rose-500/20 mb-3 uppercase tracking-wider">
+                        <i class="fa-solid fa-shield-halved"></i> Protection Hub
+                    </div>
+                    <h2 class="text-3xl lg:text-4xl font-black text-white tracking-tight">Vehicle & General Insurance</h2>
+                    <p class="text-slate-400 mt-2 max-w-xl text-sm font-light">Sahi and instant motor insurance, policies and quick renewals check karne wale top official channels.</p>
+                </header>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                    <!-- Option 1: Go Digit -->
+                    <div class="premium-card p-8 rounded-3xl flex flex-col justify-between border-t-4 border-t-rose-500">
+                        <div>
+                            <div class="w-14 h-14 rounded-2xl bg-rose-500/10 text-rose-500 flex items-center justify-center text-2xl mb-6 border border-rose-500/20 shadow-lg shadow-rose-500/10">
+                                <i class="fa-solid fa-hands-holding-circle"></i>
+                            </div>
+                            <h3 class="text-2xl font-bold text-white mb-3">Go Digit</h3>
+                            <p class="text-sm text-slate-400 mb-8 leading-relaxed">
+                                Go Digit insurance partner dashboard par login karke motor policies aur instant renewals handle karein.
+                            </p>
+                        </div>
+                        <button onclick="openService('https://plus.godigit.com/#/login', 'GoDigit_Portal')" class="glow-button w-full bg-gradient-to-r from-rose-500 to-red-600 hover:from-rose-400 hover:to-red-500 text-slate-950 font-bold py-3.5 px-4 rounded-2xl transition duration-300 flex items-center justify-center gap-2 border border-rose-500/30 shadow-lg shadow-rose-500/10">
+                            Open Go Digit <i class="fa-solid fa-arrow-up-right-from-square text-xs"></i>
+                        </button>
+                    </div>
+
+                    <!-- Option 2: Tata AIG -->
+                    <div class="premium-card p-8 rounded-3xl flex flex-col justify-between border-t-4 border-t-indigo-500">
+                        <div>
+                            <div class="w-14 h-14 rounded-2xl bg-indigo-500/10 text-indigo-400 flex items-center justify-center text-2xl mb-6 border border-indigo-500/20 shadow-lg shadow-indigo-500/10">
+                                <i class="fa-solid fa-umbrella"></i>
+                            </div>
+                            <h3 class="text-2xl font-bold text-white mb-3">Tata AIG</h3>
+                            <p class="text-sm text-slate-400 mb-8 leading-relaxed">
+                                Tata AIG partner portal par login karein, claims apply karein aur comprehensive policy database explore karein.
+                            </p>
+                        </div>
+                        <button onclick="openService('https://sellonline.tataaig.com/ipdsv2/login/#/login', 'TataAIG_Portal')" class="glow-button w-full bg-gradient-to-r from-indigo-500 to-sky-600 hover:from-indigo-400 hover:to-sky-500 text-slate-950 font-bold py-3.5 px-4 rounded-2xl transition duration-300 flex items-center justify-center gap-2 border border-indigo-500/30 shadow-lg shadow-indigo-500/10">
+                            Open Tata AIG <i class="fa-solid fa-arrow-up-right-from-square text-xs"></i>
                         </button>
                     </div>
                 </div>
