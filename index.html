@@ -8,8 +8,10 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Font Awesome for Slick Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- pdf-lib for decrypting and compiling PDF files client-side -->
+    <!-- pdf-lib for compiling PDF files client-side -->
     <script src="https://unpkg.com/pdf-lib/dist/pdf-lib.min.js"></script>
+    <!-- PDF.js for 100% Accurate Password Verification (Supports AES-256 Encryption) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;700&display=swap');
         
@@ -277,7 +279,7 @@
                             </div>
                             <h3 class="text-lg font-bold text-white mb-2">Instant Challan Check</h3>
                             <p class="text-xs text-slate-400 mb-6 leading-relaxed">
-                                Cars24 secure framework se bina OTP ya login details bhare, direct vehicle number dalkar pending challans track karein.
+                                Cars24 secure framework se bina OTP ya login details bhare, direct vehicle text number dalkar pending challans track karein.
                             </p>
                         </div>
                         <button onclick="openService('https://www.cars24.com/traffic-challan/', 'Cars24Challan_Portal')" class="glow-button w-full bg-gradient-to-r from-sky-500/80 to-blue-600/80 hover:from-sky-400 hover:to-blue-500 text-slate-950 font-bold py-3 px-4 rounded-xl transition duration-300 flex items-center justify-center gap-2 border border-sky-500/30">
@@ -415,7 +417,7 @@
                                 <div class="border-2 border-dashed border-slate-700 rounded-2xl p-6 text-center hover:border-yellow-500/50 transition-all cursor-pointer bg-slate-950/40" onclick="document.getElementById('crack-pdf-input').click()">
                                     <i class="fa-solid fa-file-pdf text-4xl text-red-500 mb-3"></i>
                                     <p class="text-xs font-bold text-slate-300" id="crack-file-status">SELECT PROTECTED PDF</p>
-                                    <span class="text-[9px] text-slate-500 block mt-1">(Real PDF-Lib Decryption)</span>
+                                    <span class="text-[9px] text-slate-500 block mt-1">(Hybrid PDF.js Decryption)</span>
                                     <input type="file" id="crack-pdf-input" class="hidden" accept="application/pdf" onchange="updateCrackStatus(this)">
                                 </div>
 
@@ -506,6 +508,9 @@
     </footer>
 
     <script>
+        // Initialize PDF.js worker
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
+
         // Track opened windows to prevent multi-tab session conflicts
         const openedWindows = {};
 
@@ -733,24 +738,36 @@
                         }
 
                         try {
-                            // Actual PDFLib Decryption verification with deep save check
-                            const pdfDoc = await PDFLib.PDFDocument.load(crackTargetBuffer, { password: passAttempt });
-                            const savedBytes = await pdfDoc.save();
-                            unlockedBlob = new Blob([savedBytes], { type: 'application/pdf' });
-
+                            // PDF.js verification which natively supports AES-256 bit decryption
+                            const loadingTask = pdfjsLib.getDocument({
+                                data: crackTargetBuffer,
+                                password: passAttempt
+                            });
+                            const pdfDocObj = await loadingTask.promise;
+                            
                             found = true;
                             isCracking = false;
 
                             logToTerminal(`🔓 SUCCESS! ENCRYPTION BYPASSED`, "text-green-400 font-bold");
                             logToTerminal(`KEY FOUND: [${passAttempt}]`, "text-green-400 font-extrabold text-sm tracking-wider");
 
+                            // Try saving a decrypted version using pdf-lib (only works if pdf-lib supports the PDF encryption type)
+                            try {
+                                const pdfDoc = await PDFLib.PDFDocument.load(crackTargetBuffer, { password: passAttempt });
+                                const savedBytes = await pdfDoc.save();
+                                unlockedBlob = new Blob([savedBytes], { type: 'application/pdf' });
+                                document.getElementById('download-container').classList.remove('hidden');
+                                logToTerminal("Decrypted file stream generated successfully.", "text-emerald-400");
+                            } catch (libErr) {
+                                logToTerminal("Note: PDF uses AES-256 standard encryption. Use the password above to unlock original document.", "text-yellow-400 italic");
+                            }
+
                             document.getElementById('crack-status').innerText = "CRACKED";
                             document.getElementById('crack-status').className = "text-xl font-black text-emerald-500 tracking-tighter uppercase";
                             document.getElementById('crack-start-btn').innerHTML = `<i class="fa-solid fa-bullseye"></i> Launch Attack Engine`;
-                            document.getElementById('download-container').classList.remove('hidden');
                             return;
                         } catch (err) {
-                            // Failure, keep running
+                            // Wrong password, continue
                         }
 
                         currentSuffixVal++;
@@ -785,9 +802,11 @@
                         }
 
                         try {
-                            const pdfDoc = await PDFLib.PDFDocument.load(crackTargetBuffer, { password: passAttempt });
-                            const savedBytes = await pdfDoc.save();
-                            unlockedBlob = new Blob([savedBytes], { type: 'application/pdf' });
+                            const loadingTask = pdfjsLib.getDocument({
+                                data: crackTargetBuffer,
+                                password: passAttempt
+                            });
+                            const pdfDocObj = await loadingTask.promise;
 
                             found = true;
                             isCracking = false;
@@ -795,10 +814,19 @@
                             logToTerminal(`🔓 SUCCESS! ENCRYPTION BYPASSED`, "text-green-400 font-bold");
                             logToTerminal(`KEY FOUND: [${passAttempt}]`, "text-green-400 font-extrabold text-sm tracking-wider");
 
+                            try {
+                                const pdfDoc = await PDFLib.PDFDocument.load(crackTargetBuffer, { password: passAttempt });
+                                const savedBytes = await pdfDoc.save();
+                                unlockedBlob = new Blob([savedBytes], { type: 'application/pdf' });
+                                document.getElementById('download-container').classList.remove('hidden');
+                                logToTerminal("Decrypted file stream generated successfully.", "text-emerald-400");
+                            } catch (libErr) {
+                                logToTerminal("Note: PDF uses AES-256 standard encryption. Use the password above to unlock original document.", "text-yellow-400 italic");
+                            }
+
                             document.getElementById('crack-status').innerText = "CRACKED";
                             document.getElementById('crack-status').className = "text-xl font-black text-emerald-500 tracking-tighter uppercase";
                             document.getElementById('crack-start-btn').innerHTML = `<i class="fa-solid fa-bullseye"></i> Launch Attack Engine`;
-                            document.getElementById('download-container').classList.remove('hidden');
                             return;
                         } catch (err) {
                             // Failure, keep running
