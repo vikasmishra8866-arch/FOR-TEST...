@@ -10,8 +10,10 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- pdf-lib for compiling PDF files client-side -->
     <script src="https://unpkg.com/pdf-lib/dist/pdf-lib.min.js"></script>
-    <!-- PDF.js for 100% Accurate Password Verification (Supports AES-256 Encryption) -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
+    <!-- jsPDF for Generating Premium Quotations -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <!-- QRCode.js for Generating Local Address QR Codes inside PDF -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;700&display=swap');
         
@@ -80,14 +82,12 @@
         .glow-button:hover::before {
             left: 100%;
         }
-
-        /* Terminal Font styling */
-        .terminal-font {
-            font-family: 'JetBrains Mono', 'Courier New', monospace;
-        }
     </style>
 </head>
 <body class="text-slate-100 min-h-screen flex flex-col justify-between">
+
+    <!-- Hidden QR Code Anchor container used for PDF compilation -->
+    <div id="hidden-qr" class="hidden"></div>
 
     <!-- Navbar -->
     <nav class="border-b border-slate-800/60 bg-slate-950/80 backdrop-blur-md sticky top-0 z-50 px-6 py-4">
@@ -107,6 +107,7 @@
                 </div>
             </div>
             <div class="flex items-center gap-4 text-xs">
+                <span id="live-ist-time" class="text-slate-400 font-semibold mr-4 hidden md:inline-block"></span>
                 <span class="px-3 py-1.5 bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 rounded-full font-semibold flex items-center gap-1.5">
                     <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
                     Secure Nodes Active
@@ -129,6 +130,11 @@
                             <i class="fa-solid fa-wallet text-cyan-400"></i>
                             <span class="text-sm font-semibold">Pawan Auto</span>
                         </button>
+                        <!-- EMI Count Button -->
+                        <button onclick="switchTab('emi-count', this)" class="sidebar-link w-full flex items-center gap-3.5 py-3 px-4 rounded-xl text-slate-400 hover:text-white transition-all text-left">
+                            <i class="fa-solid fa-calculator text-yellow-400"></i>
+                            <span class="text-sm font-semibold">EMI Count</span>
+                        </button>
                         <!-- Vehicle Service Button -->
                         <button onclick="switchTab('vehicle-service', this)" class="sidebar-link w-full flex items-center gap-3.5 py-3 px-4 rounded-xl text-slate-400 hover:text-white transition-all text-left">
                             <i class="fa-solid fa-car text-amber-400"></i>
@@ -143,11 +149,6 @@
                         <button onclick="switchTab('insurance', this)" class="sidebar-link w-full flex items-center gap-3.5 py-3 px-4 rounded-xl text-slate-400 hover:text-white transition-all text-left">
                             <i class="fa-solid fa-shield-halved text-rose-400"></i>
                             <span class="text-sm font-semibold">Insurance</span>
-                        </button>
-                        <!-- Password Cracker Button -->
-                        <button onclick="switchTab('pass-cracker', this)" class="sidebar-link w-full flex items-center gap-3.5 py-3 px-4 rounded-xl text-slate-400 hover:text-white transition-all text-left">
-                            <i class="fa-solid fa-unlock-keyhole text-yellow-400"></i>
-                            <span class="text-sm font-semibold">Password Cracker</span>
                         </button>
                     </div>
                 </div>
@@ -196,7 +197,143 @@
                 </div>
             </div>
 
-            <!-- SECTION 2: VEHICLE SERVICE TAB -->
+            <!-- SECTION 2: EMI COUNT (PAWAN AUTO FINANCE QUOTATION ENGINE) -->
+            <div id="emi-count" class="tab-content hidden animate-in fade-in duration-300">
+                <header class="mb-10">
+                    <div class="inline-flex items-center gap-2 px-3 py-1 bg-yellow-500/10 text-yellow-400 text-xs font-bold rounded-full border border-yellow-500/20 mb-3 uppercase tracking-wider">
+                        <i class="fa-solid fa-landmark"></i> Pawan Auto Finance
+                    </div>
+                    <h2 class="text-3xl lg:text-4xl font-black text-white tracking-tight">EMI Quotation Generator</h2>
+                    <p class="text-slate-400 mt-2 max-w-xl text-sm font-light">Vehicle dynamic parameters fill karke fast professional, printable repayment estimations taiyar karein.</p>
+                </header>
+
+                <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+                    <!-- Inputs Form Grid -->
+                    <div class="lg:col-span-6 space-y-6">
+                        <div class="premium-card p-6 rounded-3xl border border-slate-800 space-y-6">
+                            <h3 class="text-lg font-bold text-white flex items-center gap-2 border-b border-slate-800 pb-3">
+                                <i class="fa-solid fa-sliders text-yellow-400"></i> Quotation Configuration
+                            </h3>
+
+                            <!-- Mode Selection -->
+                            <div>
+                                <label class="text-[10px] uppercase text-slate-400 font-bold tracking-wider mb-2 block">Quotation Type</label>
+                                <div class="flex gap-4 p-1 bg-slate-950 rounded-xl border border-slate-800">
+                                    <button onclick="setEmiMode('vehicle')" id="mode-btn-vehicle" class="flex-grow py-2 px-4 text-xs font-bold rounded-lg transition-all bg-yellow-400 text-slate-950 shadow">
+                                        Vehicle Purchase
+                                    </button>
+                                    <button onclick="setEmiMode('loan')" id="mode-btn-loan" class="flex-grow py-2 px-4 text-xs font-bold rounded-lg transition-all text-slate-400 hover:text-white">
+                                        Loan on Vehicle
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Basic Client Info -->
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                <div>
+                                    <label class="text-[10px] uppercase text-slate-400 font-bold mb-1.5 block">Customer Name</label>
+                                    <input type="text" id="emi-cust-name" oninput="calculateEmiPreview()" placeholder="VIKAS MISHRA" class="w-full bg-slate-900 border border-slate-800 rounded-xl p-3 text-sm text-yellow-400 outline-none focus:border-yellow-500 font-mono">
+                                </div>
+                                <div>
+                                    <label class="text-[10px] uppercase text-slate-400 font-bold mb-1.5 block">Vehicle Name</label>
+                                    <input type="text" id="emi-veh-name" oninput="calculateEmiPreview()" placeholder="PIAGGIO / APE" class="w-full bg-slate-900 border border-slate-800 rounded-xl p-3 text-sm text-yellow-400 outline-none focus:border-yellow-500 font-mono">
+                                </div>
+                            </div>
+
+                            <!-- Dynamic Inputs (Changes according to mode) -->
+                            <div id="emi-vehicle-purchase-inputs" class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                <div>
+                                    <label class="text-[10px] uppercase text-slate-400 font-bold mb-1.5 block">Vehicle Price (Rs)</label>
+                                    <input type="number" id="emi-price" oninput="calculateEmiPreview()" placeholder="Enter Price" class="w-full bg-slate-900 border border-slate-800 rounded-xl p-3 text-sm text-yellow-400 outline-none focus:border-yellow-500 font-mono">
+                                </div>
+                                <div>
+                                    <label class="text-[10px] uppercase text-slate-400 font-bold mb-1.5 block">Down Payment (Rs)</label>
+                                    <input type="number" id="emi-down" oninput="calculateEmiPreview()" placeholder="Enter Down Payment" class="w-full bg-slate-900 border border-slate-800 rounded-xl p-3 text-sm text-yellow-400 outline-none focus:border-yellow-500 font-mono">
+                                </div>
+                                <div>
+                                    <label class="text-[10px] uppercase text-slate-400 font-bold mb-1.5 block">File Charges (Rs)</label>
+                                    <input type="number" id="emi-file" oninput="calculateEmiPreview()" placeholder="Enter File Charges" class="w-full bg-slate-900 border border-slate-800 rounded-xl p-3 text-sm text-yellow-400 outline-none focus:border-yellow-500 font-mono">
+                                </div>
+                                <div>
+                                    <label class="text-[10px] uppercase text-slate-400 font-bold mb-1.5 block">Other Charges (Rs)</label>
+                                    <input type="number" id="emi-other" oninput="calculateEmiPreview()" placeholder="Enter Other Charges" class="w-full bg-slate-900 border border-slate-800 rounded-xl p-3 text-sm text-yellow-400 outline-none focus:border-yellow-500 font-mono">
+                                </div>
+                            </div>
+
+                            <div id="emi-loan-inputs" class="grid grid-cols-1 sm:grid-cols-2 gap-4 hidden">
+                                <div>
+                                    <label class="text-[10px] uppercase text-slate-400 font-bold mb-1.5 block">Loan Amount (Rs)</label>
+                                    <input type="number" id="emi-loan-amt" oninput="calculateEmiPreview()" placeholder="Enter Loan Amt" class="w-full bg-slate-900 border border-slate-800 rounded-xl p-3 text-sm text-yellow-400 outline-none focus:border-yellow-500 font-mono">
+                                </div>
+                                <div>
+                                    <label class="text-[10px] uppercase text-slate-400 font-bold mb-1.5 block">Insurance Charge (Rs)</label>
+                                    <input type="number" id="emi-ins-ch" oninput="calculateEmiPreview()" placeholder="0" class="w-full bg-slate-900 border border-slate-800 rounded-xl p-3 text-sm text-yellow-400 outline-none focus:border-yellow-500 font-mono">
+                                </div>
+                                <div>
+                                    <label class="text-[10px] uppercase text-slate-400 font-bold mb-1.5 block">Passing Charge (Rs)</label>
+                                    <input type="number" id="emi-pass-ch" oninput="calculateEmiPreview()" placeholder="0" class="w-full bg-slate-900 border border-slate-800 rounded-xl p-3 text-sm text-yellow-400 outline-none focus:border-yellow-500 font-mono">
+                                </div>
+                                <div>
+                                    <label class="text-[10px] uppercase text-slate-400 font-bold mb-1.5 block">Transfer Charge (Rs)</label>
+                                    <input type="number" id="emi-trans-ch" oninput="calculateEmiPreview()" placeholder="0" class="w-full bg-slate-900 border border-slate-800 rounded-xl p-3 text-sm text-yellow-400 outline-none focus:border-yellow-500 font-mono">
+                                </div>
+                                <div>
+                                    <label class="text-[10px] uppercase text-slate-400 font-bold mb-1.5 block">HP Terminate Charge (Rs)</label>
+                                    <input type="number" id="emi-hp-term" oninput="calculateEmiPreview()" placeholder="0" class="w-full bg-slate-900 border border-slate-800 rounded-xl p-3 text-sm text-yellow-400 outline-none focus:border-yellow-500 font-mono">
+                                </div>
+                                <div>
+                                    <label class="text-[10px] uppercase text-slate-400 font-bold mb-1.5 block">HP Add Charge (Rs)</label>
+                                    <input type="number" id="emi-hp-add" oninput="calculateEmiPreview()" placeholder="0" class="w-full bg-slate-900 border border-slate-800 rounded-xl p-3 text-sm text-yellow-400 outline-none focus:border-yellow-500 font-mono">
+                                </div>
+                                <div class="sm:col-span-2">
+                                    <label class="text-[10px] uppercase text-slate-400 font-bold mb-1.5 block">Other Charge (Rs)</label>
+                                    <input type="number" id="emi-oth-ch" oninput="calculateEmiPreview()" placeholder="0" class="w-full bg-slate-900 border border-slate-800 rounded-xl p-3 text-sm text-yellow-400 outline-none focus:border-yellow-500 font-mono">
+                                </div>
+                            </div>
+
+                            <!-- Interest Settings -->
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                <div>
+                                    <label class="text-[10px] uppercase text-slate-400 font-bold mb-1.5 block">Interest Type</label>
+                                    <div class="flex gap-2">
+                                        <button onclick="setInterestType('flat')" id="int-flat" class="flex-grow py-2.5 px-3 text-xs font-bold rounded-xl border border-yellow-500 bg-yellow-500/10 text-yellow-400 transition-all">Flat Rate</button>
+                                        <button onclick="setInterestType('reducing')" id="int-reducing" class="flex-grow py-2.5 px-3 text-xs font-bold rounded-xl border border-slate-800 text-slate-400 transition-all">Reducing</button>
+                                    </div>
+                                </div>
+                                <div>
+                                    <label class="text-[10px] uppercase text-slate-400 font-bold mb-1.5 block" id="roi-label">Flat Rate (%)</label>
+                                    <input type="number" id="emi-roi" oninput="calculateEmiPreview()" value="18.0" step="0.1" class="w-full bg-slate-900 border border-slate-800 rounded-xl p-3 text-sm text-yellow-400 outline-none focus:border-yellow-500 font-mono">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Repayment Live Metrics and Actions -->
+                    <div class="lg:col-span-6 flex flex-col space-y-6">
+                        <div class="premium-card p-6 rounded-3xl border border-slate-800 flex-grow flex flex-col justify-between">
+                            <div>
+                                <h3 class="text-lg font-bold text-white flex items-center justify-between border-b border-slate-800 pb-3">
+                                    <span class="flex items-center gap-2"><i class="fa-solid fa-chart-simple text-cyan-400"></i> Live Repayment Matrix</span>
+                                    <span id="calculated-net-loan" class="text-sm font-mono text-cyan-400 font-bold">Net Loan: ₹0.00</span>
+                                </h3>
+
+                                <!-- live preview emi list -->
+                                <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 mt-6" id="emi-metrics-grid">
+                                    <!-- Dynamic blocks loaded from script -->
+                                </div>
+                            </div>
+
+                            <div class="pt-8 border-t border-slate-800 mt-8">
+                                <button onclick="generateQuotationPDF()" class="glow-button w-full bg-gradient-to-r from-yellow-500 to-orange-600 hover:from-yellow-400 hover:to-orange-500 text-slate-950 font-black py-4 rounded-2xl transition duration-300 flex items-center justify-center gap-2 border border-yellow-500/30 shadow-lg shadow-yellow-500/10 uppercase tracking-widest text-xs">
+                                    <i class="fa-solid fa-file-pdf text-base"></i> Generate Premium PDF Quotation
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SECTION 3: VEHICLE SERVICE TAB -->
             <div id="vehicle-service" class="tab-content hidden animate-in fade-in duration-300">
                 <header class="mb-10">
                     <div class="inline-flex items-center gap-2 px-3 py-1 bg-amber-500/10 text-amber-400 text-xs font-bold rounded-full border border-amber-500/20 mb-3 uppercase tracking-wider">
@@ -279,7 +416,7 @@
                             </div>
                             <h3 class="text-lg font-bold text-white mb-2">Instant Challan Check</h3>
                             <p class="text-xs text-slate-400 mb-6 leading-relaxed">
-                                Cars24 secure framework se bina OTP ya login details bhare, direct vehicle text number dalkar pending challans track karein.
+                                Cars24 secure framework se bina OTP ya login details bhare, direct vehicle number dalkar pending challans track karein.
                             </p>
                         </div>
                         <button onclick="openService('https://www.cars24.com/traffic-challan/', 'Cars24Challan_Portal')" class="glow-button w-full bg-gradient-to-r from-sky-500/80 to-blue-600/80 hover:from-sky-400 hover:to-blue-500 text-slate-950 font-bold py-3 px-4 rounded-xl transition duration-300 flex items-center justify-center gap-2 border border-sky-500/30">
@@ -289,7 +426,7 @@
                 </div>
             </div>
 
-            <!-- SECTION 3: DOCUMENT DOWNLOAD TAB -->
+            <!-- SECTION 4: DOCUMENT DOWNLOAD TAB -->
             <div id="doc-download" class="tab-content hidden animate-in fade-in duration-300">
                 <header class="mb-10">
                     <div class="inline-flex items-center gap-2 px-3 py-1 bg-purple-500/10 text-purple-400 text-xs font-bold rounded-full border border-purple-500/20 mb-3 uppercase tracking-wider">
@@ -350,7 +487,7 @@
                 </div>
             </div>
 
-            <!-- SECTION 4: INSURANCE TAB -->
+            <!-- SECTION 5: INSURANCE TAB -->
             <div id="insurance" class="tab-content hidden animate-in fade-in duration-300">
                 <header class="mb-10">
                     <div class="inline-flex items-center gap-2 px-3 py-1 bg-rose-500/10 text-rose-400 text-xs font-bold rounded-full border border-rose-500/20 mb-3 uppercase tracking-wider">
@@ -395,110 +532,19 @@
                 </div>
             </div>
 
-            <!-- SECTION 5: PASSWORD CRACKER TAB -->
-            <div id="pass-cracker" class="tab-content hidden animate-in fade-in duration-300">
-                <header class="mb-10">
-                    <div class="inline-flex items-center gap-2 px-3 py-1 bg-yellow-500/10 text-yellow-400 text-xs font-bold rounded-full border border-yellow-500/20 mb-3 uppercase tracking-wider">
-                        <i class="fa-solid fa-unlock-keyhole"></i> Decryption Module
-                    </div>
-                    <h2 class="text-3xl lg:text-4xl font-black text-white tracking-tight">Smart PDF Password Recovery</h2>
-                    <p class="text-slate-400 mt-2 max-w-xl text-sm font-light">Protected PDF upload karein aur target prefix base combinations se decryption bypass execute karein.</p>
-                </header>
-
-                <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
-                    <!-- Control Settings Panel -->
-                    <div class="lg:col-span-5 space-y-6">
-                        <div class="premium-card p-6 rounded-3xl border border-slate-800 flex flex-col justify-between">
-                            <div class="space-y-5">
-                                <h3 class="text-lg font-bold text-white flex items-center gap-2">
-                                    <i class="fa-solid fa-gears text-yellow-400"></i> Attack Parameters
-                                </h3>
-                                
-                                <div class="border-2 border-dashed border-slate-700 rounded-2xl p-6 text-center hover:border-yellow-500/50 transition-all cursor-pointer bg-slate-950/40" onclick="document.getElementById('crack-pdf-input').click()">
-                                    <i class="fa-solid fa-file-pdf text-4xl text-red-500 mb-3"></i>
-                                    <p class="text-xs font-bold text-slate-300" id="crack-file-status">SELECT PROTECTED PDF</p>
-                                    <span class="text-[9px] text-slate-500 block mt-1">(Hybrid PDF.js Decryption)</span>
-                                    <input type="file" id="crack-pdf-input" class="hidden" accept="application/pdf" onchange="updateCrackStatus(this)">
-                                </div>
-
-                                <div class="space-y-1">
-                                    <label class="text-[10px] font-bold text-slate-500 uppercase ml-1">Recovery Mode</label>
-                                    <select id="crack-mode" onchange="toggleModeUI()" class="w-full bg-slate-900 border border-slate-800 rounded-xl p-3 text-sm font-semibold text-yellow-400 outline-none focus:border-yellow-500">
-                                        <option value="name4">Name + 4 Digits</option>
-                                        <option value="num8">8-Digit Numbers Only</option>
-                                    </select>
-                                </div>
-
-                                <div class="space-y-1" id="crack-hint-container">
-                                    <label class="text-[10px] font-bold text-slate-500 uppercase ml-1">Target Name Hint (e.g., AMAR / VIKAS)</label>
-                                    <input type="text" id="crack-hint" placeholder="Vikasmishra" class="w-full bg-slate-900 border border-slate-800 rounded-xl p-4 text-sm font-mono text-yellow-400 outline-none focus:border-yellow-500">
-                                </div>
-
-                                <div class="flex items-center gap-3 bg-yellow-500/5 p-4 rounded-xl border border-yellow-500/10">
-                                    <i class="fa-solid fa-circle-info text-yellow-500 text-sm"></i>
-                                    <p class="text-[10px] text-yellow-200/80 leading-relaxed font-light">
-                                        System aapke choose kiye gaye scanning pattern ke hisaab se robust dictionary automatic run karega.
-                                    </p>
-                                </div>
-                            </div>
-
-                            <div class="pt-6 mt-4">
-                                <button id="crack-start-btn" onclick="toggleCracker()" class="w-full bg-gradient-to-r from-yellow-500 to-orange-600 hover:from-yellow-400 hover:to-orange-500 text-slate-950 font-black py-4 rounded-2xl transition duration-300 flex items-center justify-center gap-2 border border-yellow-500/30 shadow-lg shadow-yellow-500/10 uppercase tracking-wider text-xs">
-                                    <i class="fa-solid fa-bullseye"></i> Launch Attack Engine
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Console/Terminal Area -->
-                    <div class="lg:col-span-7 flex flex-col">
-                        <div class="premium-card p-6 rounded-3xl border border-slate-800 flex flex-col flex-grow min-h-[450px]">
-                            <div class="flex justify-between items-center mb-4">
-                                <span class="text-xs font-black uppercase text-yellow-500 tracking-widest flex items-center gap-2">
-                                    <span class="w-2 h-2 bg-yellow-400 rounded-full animate-ping"></span> Live Execution Log
-                                </span>
-                                <div class="flex gap-2">
-                                    <div class="w-3 h-3 rounded-full bg-red-500/70"></div>
-                                    <div class="w-3 h-3 rounded-full bg-yellow-500/70"></div>
-                                    <div class="w-3 h-3 rounded-full bg-green-500/70"></div>
-                                </div>
-                            </div>
-                            
-                            <!-- Hacker-style terminal screen -->
-                            <div id="crack-terminal" class="terminal-font text-[11px] bg-black/90 p-4 rounded-2xl border border-slate-800/80 h-72 overflow-y-auto leading-relaxed text-emerald-400 flex-grow shadow-inner">
-                                [SYSTEM] Decryption socket channel initialized...<br>
-                                [SYSTEM] Awaiting locked target parameter injection...
-                            </div>
-
-                            <div class="grid grid-cols-2 gap-4 mt-4">
-                                <div class="bg-slate-900/80 p-3 rounded-xl border border-slate-800 text-center">
-                                    <span class="text-[10px] text-slate-500 block font-bold uppercase tracking-wider">Attempts</span>
-                                    <span id="crack-count" class="text-xl font-black text-cyan-400 tracking-tighter">0</span>
-                                </div>
-                                <div class="bg-slate-900/80 p-3 rounded-xl border border-slate-800 text-center">
-                                    <span class="text-[10px] text-slate-500 block font-bold uppercase tracking-wider">Engine State</span>
-                                    <span id="crack-status" class="text-xl font-black text-yellow-500 tracking-tighter uppercase">IDLE</span>
-                                </div>
-                            </div>
-
-                            <!-- Download Button Container (Shows on cracking success) -->
-                            <div id="download-container" class="hidden mt-4 pt-3 border-t border-slate-800">
-                                <button onclick="downloadUnlockedPDF()" class="w-full bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-slate-950 font-black py-4 rounded-2xl transition duration-300 flex items-center justify-center gap-2 border border-emerald-500/30 shadow-lg shadow-emerald-500/10 uppercase tracking-widest text-xs">
-                                    <i class="fa-solid fa-file-arrow-down text-base"></i> Download Unlocked PDF
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
         </main>
     </div>
+
+    <!-- Floating WhatsApp Button -->
+    <a href="https://wa.me/919696159863" target="_blank" class="fixed bottom-6 right-6 bg-emerald-500 text-white font-bold py-3 px-6 rounded-full shadow-2xl hover:scale-105 active:scale-95 transition-all flex items-center gap-2 z-50">
+        <i class="fa-brands fa-whatsapp text-xl"></i>
+        <span>WhatsApp Support</span>
+    </a>
 
     <!-- Footer -->
     <footer class="border-t border-slate-900 bg-slate-950/40 py-8 text-center text-sm text-slate-500">
         <div class="max-w-[1600px] mx-auto flex flex-col md:flex-row justify-between items-center px-6 gap-4">
-            <p>© 2026 Vikas Cyber-Hub. All visual designs & references belong to official authorities.</p>
+            <p>© 2026 Vikas Cyber-Hub. All visual designs & references belong to Pawan Auto Finance authorities.</p>
             <p class="text-slate-600 text-xs">
                 <span class="text-cyan-500 font-bold">⚡ Fast</span> • 
                 <span class="text-indigo-400 font-bold">🛡️ Secure</span> • 
@@ -508,25 +554,19 @@
     </footer>
 
     <script>
-        // Initialize PDF.js worker
-        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
-
         // Track opened windows to prevent multi-tab session conflicts
         const openedWindows = {};
 
-        // Window opening handler
+        // Window opening handler for external links
         function openService(url, targetName) {
             const width = 1150;
             const height = 800;
             const left = (screen.width - width) / 2;
             const top = (screen.height - height) / 2;
             
-            // Check if window reference exists and is not closed
             if (openedWindows[targetName] && !openedWindows[targetName].closed) {
-                // Instantly bring existing window to the front
                 openedWindows[targetName].focus();
             } else {
-                // Open new secure isolated popup
                 openedWindows[targetName] = window.open(
                     url, 
                     targetName, 
@@ -537,23 +577,18 @@
 
         // SPA Tab switching controller
         function switchTab(tabId, el) {
-            // Hide all tab contents
             document.querySelectorAll('.tab-content').forEach(tab => {
                 tab.classList.add('hidden');
             });
 
-            // Show current active tab
             document.getElementById(tabId).classList.remove('hidden');
 
-            // Reset active state for all sidebar buttons
             document.querySelectorAll('.sidebar-link').forEach(link => {
                 link.classList.remove('sidebar-active');
             });
 
-            // Set active state on clicked element
             el.classList.add('sidebar-active');
 
-            // Auto-close sidebar on mobile after clicking
             const sidebar = document.getElementById('sidebar');
             if (!sidebar.classList.contains('-translate-x-full')) {
                 toggleSidebar();
@@ -573,289 +608,337 @@
         }
 
         // ==========================================
-        // PASSWORD CRACKER ENGINE (REAL BATCH LOGIC)
+        // DYNAMIC IST TIME & CLOCK ENGINE
         // ==========================================
-        let isCracking = false;
-        let crackTargetBuffer = null;
-        let unlockedBlob = null;
-        let attemptTask = null;
-
-        const COMMON_INDIAN_NAMES = [
-            "AMIT", "ANIL", "ARUN", "AJAY", "ABHI", "AKAS", "AMAN", "ANSH", "ANUP", "ASHU", 
-            "DEEP", "DEVA", "DINE", "GAUR", "GURU", "HARI", "HEMA", "INDU", "JAYA", "JAYE", 
-            "JYOT", "KAMA", "KAPI", "KIRA", "KUNA", "LALU", "MADH", "MANO", "MEEN", "MOHA", 
-            "MUKA", "NEER", "NITI", "PANK", "PAWA", "PIYU", "POOJ", "PRAD", "PRAK", "PRAM", 
-            "RAHU", "RAJA", "RAJE", "RAKE", "RAMA", "RANI", "RAVI", "RISH", "ROHA", "ROHI", 
-            "SACH", "SAME", "SANJ", "SANT", "SARA", "SATI", "SHIV", "SHYA", "SONU", "SUMI", 
-            "SUNI", "SURA", "TARA", "UMES", "VIKA", "VIMA", "VINA", "VINO", "VIVE", "YOGE", 
-            "KUMA", "SING", "MISH", "SHAR", "VERM", "GUPT", "YADA", "PATE", "CHAU", "KHAN",
-            "RAWA", "NEGI", "BISH", "SAIN", "DHIL", "SIDD", "KAUR", "BALA", "ALOK", "ASIF",
-            "BABU", "BALI", "BINK", "CHET", "DAKS", "ESHA", "FAIZ", "GOPL", "HARS", "ISHA",
-            "JNAT", "KAVS", "LOKS", "MAHE", "NARE", "OMPR", "PRAT", "QASH", "RASH", "SUDH"
-        ];
-
-        function toggleModeUI() {
-            const mode = document.getElementById('crack-mode').value;
-            const hintContainer = document.getElementById('crack-hint-container');
-            if (mode === 'num8') {
-                hintContainer.style.display = 'none';
-            } else {
-                hintContainer.style.display = 'block';
-            }
-        }
-
-        function logToTerminal(msg, colorClass = '') {
-            const terminal = document.getElementById('crack-terminal');
-            const span = document.createElement('div');
-            if (colorClass) {
-                span.className = colorClass;
-            }
-            span.innerHTML = `> ${msg}`;
-            terminal.appendChild(span);
-            terminal.scrollTop = terminal.scrollHeight;
-        }
-
-        function updateCrackStatus(input) {
-            const file = input.files[0];
-            if (file) {
-                document.getElementById('crack-file-status').innerText = "TARGET PDF LOCKED: " + file.name.substring(0, 20).toUpperCase();
-                
-                // Read PDF file into memory buffer
-                const reader = new FileReader();
-                reader.onload = function() {
-                    crackTargetBuffer = new Uint8Array(this.result);
-                    logToTerminal(`File loaded: [${file.name}] ready for decrypt payload.`, 'text-cyan-400');
-                };
-                reader.readAsArrayBuffer(file);
-            }
-        }
-
-        function toggleCracker() {
-            if (isCracking) {
-                stopCracking();
-            } else {
-                startCracking();
-            }
-        }
-
-        function stopCracking() {
-            isCracking = false;
-            if (attemptTask) {
-                clearTimeout(attemptTask);
-                attemptTask = null;
-            }
-            document.getElementById('crack-start-btn').innerHTML = `<i class="fa-solid fa-bullseye"></i> Launch Attack Engine`;
-            document.getElementById('crack-status').innerText = "IDLE";
-            document.getElementById('crack-status').className = "text-xl font-black text-yellow-500 tracking-tighter uppercase";
-            logToTerminal("Brute-force processing aborted by user.", "text-red-400 font-bold");
-        }
-
-        async function startCracking() {
-            const hint = document.getElementById('crack-hint').value.trim();
-            const terminal = document.getElementById('crack-terminal');
-            const mode = document.getElementById('crack-mode').value;
+        function updateISTClock() {
+            const options = {
+                timeZone: 'Asia/Kolkata',
+                day: '2-digit',
+                month: '2-digit',
+                year: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit',
+                hour12: true
+            };
+            const formatter = new Intl.DateTimeFormat('en-IN', options);
+            const formatted = formatter.format(new Date());
             
-            if (!crackTargetBuffer) {
-                alert("Pehle locked PDF file upload karein!");
+            // Format structure matching Streamlit's original look: "DD-MM-YYYY hh:mm:ss AM/PM"
+            const parts = formatted.split(', ');
+            const datePart = parts[0].replace(/\//g, '-');
+            const timePart = parts[1].toUpperCase();
+
+            document.getElementById('live-ist-time').innerHTML = `📅 ${datePart} ${timePart}`;
+        }
+        setInterval(updateISTClock, 1000);
+        updateISTClock();
+
+        // ==========================================
+        // EMI GENERATION & QUOTATION MODULE (PAWAN AUTO)
+        // ==========================================
+        let emiQuotationMode = 'vehicle'; // 'vehicle' or 'loan'
+        let selectedInterestType = 'flat'; // 'flat' or 'reducing'
+
+        function setEmiMode(mode) {
+            emiQuotationMode = mode;
+            
+            const btnVehicle = document.getElementById('mode-btn-vehicle');
+            const btnLoan = document.getElementById('mode-btn-loan');
+            const vehicleInputs = document.getElementById('emi-vehicle-purchase-inputs');
+            const loanInputs = document.getElementById('emi-loan-inputs');
+
+            if(mode === 'vehicle') {
+                btnVehicle.className = "flex-grow py-2 px-4 text-xs font-bold rounded-lg transition-all bg-yellow-400 text-slate-950 shadow";
+                btnLoan.className = "flex-grow py-2 px-4 text-xs font-bold rounded-lg transition-all text-slate-400 hover:text-white";
+                vehicleInputs.classList.remove('hidden');
+                loanInputs.classList.add('hidden');
+            } else {
+                btnLoan.className = "flex-grow py-2 px-4 text-xs font-bold rounded-lg transition-all bg-yellow-400 text-slate-950 shadow";
+                btnVehicle.className = "flex-grow py-2 px-4 text-xs font-bold rounded-lg transition-all text-slate-400 hover:text-white";
+                loanInputs.classList.remove('hidden');
+                vehicleInputs.classList.add('hidden');
+            }
+            calculateEmiPreview();
+        }
+
+        function setInterestType(type) {
+            selectedInterestType = type;
+            const btnFlat = document.getElementById('int-flat');
+            const btnReducing = document.getElementById('int-reducing');
+            const roiLabel = document.getElementById('roi-label');
+
+            if(type === 'flat') {
+                btnFlat.className = "flex-grow py-2.5 px-3 text-xs font-bold rounded-xl border border-yellow-500 bg-yellow-500/10 text-yellow-400 transition-all";
+                btnReducing.className = "flex-grow py-2.5 px-3 text-xs font-bold rounded-xl border border-slate-800 text-slate-400 transition-all";
+                roiLabel.innerText = "Flat Rate (%)";
+            } else {
+                btnReducing.className = "flex-grow py-2.5 px-3 text-xs font-bold rounded-xl border border-yellow-500 bg-yellow-500/10 text-yellow-400 transition-all";
+                btnFlat.className = "flex-grow py-2.5 px-3 text-xs font-bold rounded-xl border border-slate-800 text-slate-400 transition-all";
+                roiLabel.innerText = "Reducing Balance (%)";
+            }
+            calculateEmiPreview();
+        }
+
+        // Get sanitized float values to ensure safe mathematics withoutNaN
+        function getVal(id) {
+            const val = parseFloat(document.getElementById(id).value);
+            return isNaN(val) ? 0 : val;
+        }
+
+        // Main Calculation Engine mapping ReportLab/Streamlit rules
+        function getLoanAmount() {
+            if(emiQuotationMode === 'vehicle') {
+                const price = getVal('emi-price');
+                const down = getVal('emi-down');
+                const fileCharges = getVal('emi-file');
+                const otherCharges = getVal('emi-other');
+                return price - down + fileCharges + otherCharges;
+            } else {
+                const loanAmt = getVal('emi-loan-amt');
+                const insCh = getVal('emi-ins-ch');
+                const passCh = getVal('emi-pass-ch');
+                const transCh = getVal('emi-trans-ch');
+                const hpTerm = getVal('emi-hp-term');
+                const hpAdd = getVal('emi-hp-add');
+                const othCh = getVal('emi-oth-ch');
+                return loanAmt + insCh + passCh + transCh + hpTerm + hpAdd + othCh;
+            }
+        }
+
+        function calculateEmiPreview() {
+            const loanAmt = getLoanAmount();
+            const roi = getVal('emi-roi');
+            const metricsGrid = document.getElementById('emi-metrics-grid');
+            const netLoanHeader = document.getElementById('calculated-net-loan');
+
+            // Format Net Loan header
+            netLoanHeader.innerText = `Net Loan: ₹${loanAmt.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+
+            if(loanAmt <= 0) {
+                metricsGrid.innerHTML = `
+                    <div class="col-span-4 text-center py-10 text-slate-500 italic text-sm">
+                        Kripya calculation dekhne ke liye parameters fillup karein...
+                    </div>
+                `;
                 return;
             }
 
-            let prefixes = [];
-            if (mode === 'name4') {
-                // Name + 4 Digits Logic mapping directly from the tested codebase
-                if (hint && hint.length >= 4) {
-                    for (let i = 0; i <= hint.length - 4; i++) {
-                        let chunk = hint.substring(i, i+4);
-                        prefixes.push(chunk);
-                        prefixes.push(chunk.toUpperCase());
-                        prefixes.push(chunk.toLowerCase());
-                    }
-                }
-                
-                // Add common names if they are not already in prefix list
-                COMMON_INDIAN_NAMES.forEach(name => {
-                    if (!prefixes.includes(name)) {
-                        prefixes.push(name);
-                    }
-                    const nameLower = name.toLowerCase();
-                    if (!prefixes.includes(nameLower)) {
-                        prefixes.push(nameLower);
-                    }
-                });
+            const tenures = [5, 10, 12, 15, 18, 24, 30, 36];
+            metricsGrid.innerHTML = '';
 
-                // Remove duplicates to run as fast as possible
-                prefixes = [...new Set(prefixes)];
-            }
-
-            isCracking = true;
-            document.getElementById('crack-start-btn').innerHTML = `<i class="fa-solid fa-circle-stop"></i> Stop Attack Engine`;
-            document.getElementById('crack-status').innerText = "ATTACKING";
-            document.getElementById('crack-status').className = "text-xl font-black text-cyan-400 tracking-tighter uppercase animate-pulse";
-            document.getElementById('download-container').classList.add('hidden');
-            
-            terminal.innerHTML = ""; // Clear log
-            logToTerminal("Booting Algorithmic PDF-Lib Recovery Module...", "text-yellow-400 font-bold");
-            if (mode === 'name4') {
-                logToTerminal(`Target Prefix List: [${prefixes.slice(0, 5).join(", ")}...]`, "text-slate-400");
-            } else {
-                logToTerminal("Target Mode: 8-Digit Sequential Numeric Scan", "text-slate-400");
-            }
-            
-            let totalAttempts = 0;
-            let currentPrefixIdx = 0;
-            let currentSuffixVal = 0;
-            let currentNumVal = 0; // For 8 digit mode
-            let found = false;
-
-            const batchSize = 100; // Optimal non-blocking sequence size for real-time testing
-            
-            async function processBatch() {
-                if (!isCracking || found) return;
-
-                if (mode === 'name4') {
-                    if (currentPrefixIdx >= prefixes.length) {
-                        logToTerminal("Brute force failed: Target combinations exhausted.", "text-red-500 font-bold");
-                        stopCracking();
-                        document.getElementById('crack-status').innerText = "FAILED";
-                        document.getElementById('crack-status').className = "text-xl font-black text-red-500 tracking-tighter uppercase";
-                        return;
-                    }
-
-                    const prefix = prefixes[currentPrefixIdx];
-                    logToTerminal(`Scanning Range: [${prefix}XXXX]...`, "text-slate-500");
-
-                    // Loop through suffix combinations
-                    for (let k = 0; k < batchSize; k++) {
-                        if (!isCracking) return;
-
-                        const padValue = currentSuffixVal.toString().padStart(4, '0');
-                        const passAttempt = prefix + padValue;
-                        totalAttempts++;
-
-                        // Periodically update attempt count in UI
-                        if (totalAttempts % 10 === 0) {
-                            document.getElementById('crack-count').innerText = totalAttempts;
-                        }
-
-                        try {
-                            // PDF.js verification which natively supports AES-256 bit decryption
-                            const loadingTask = pdfjsLib.getDocument({
-                                data: crackTargetBuffer,
-                                password: passAttempt
-                            });
-                            const pdfDocObj = await loadingTask.promise;
-                            
-                            found = true;
-                            isCracking = false;
-
-                            logToTerminal(`🔓 SUCCESS! ENCRYPTION BYPASSED`, "text-green-400 font-bold");
-                            logToTerminal(`KEY FOUND: [${passAttempt}]`, "text-green-400 font-extrabold text-sm tracking-wider");
-
-                            // Try saving a decrypted version using pdf-lib (only works if pdf-lib supports the PDF encryption type)
-                            try {
-                                const pdfDoc = await PDFLib.PDFDocument.load(crackTargetBuffer, { password: passAttempt });
-                                const savedBytes = await pdfDoc.save();
-                                unlockedBlob = new Blob([savedBytes], { type: 'application/pdf' });
-                                document.getElementById('download-container').classList.remove('hidden');
-                                logToTerminal("Decrypted file stream generated successfully.", "text-emerald-400");
-                            } catch (libErr) {
-                                logToTerminal("Note: PDF uses AES-256 standard encryption. Use the password above to unlock original document.", "text-yellow-400 italic");
-                            }
-
-                            document.getElementById('crack-status').innerText = "CRACKED";
-                            document.getElementById('crack-status').className = "text-xl font-black text-emerald-500 tracking-tighter uppercase";
-                            document.getElementById('crack-start-btn').innerHTML = `<i class="fa-solid fa-bullseye"></i> Launch Attack Engine`;
-                            return;
-                        } catch (err) {
-                            // Wrong password, continue
-                        }
-
-                        currentSuffixVal++;
-                        if (currentSuffixVal > 9999) {
-                            currentSuffixVal = 0;
-                            currentPrefixIdx++;
-                            break; // yields execution frame to change prefix
-                        }
-                    }
+            tenures.forEach(m => {
+                let emi = 0;
+                if(selectedInterestType === 'flat') {
+                    // Flat rate equation: emi = (loan_amt + (loan_amt * roi * (m/12) / 100)) / m
+                    emi = (loanAmt + (loanAmt * roi * (m / 12) / 100)) / m;
                 } else {
-                    // 8-Digit Numbers Only Mode Logic
-                    if (currentNumVal >= 100000000) {
-                        logToTerminal("Brute force failed: Target combinations exhausted.", "text-red-500 font-bold");
-                        stopCracking();
-                        document.getElementById('crack-status').innerText = "FAILED";
-                        document.getElementById('crack-status').className = "text-xl font-black text-red-500 tracking-tighter uppercase";
-                        return;
-                    }
-
-                    for (let k = 0; k < batchSize; k++) {
-                        if (!isCracking) return;
-
-                        const passAttempt = currentNumVal.toString().padStart(8, '0');
-                        totalAttempts++;
-
-                        if (totalAttempts % 10 === 0) {
-                            document.getElementById('crack-count').innerText = totalAttempts;
-                        }
-
-                        if (totalAttempts % 1500 === 0) {
-                            logToTerminal(`Testing Sequence: [${passAttempt}]...`, "text-slate-500");
-                        }
-
-                        try {
-                            const loadingTask = pdfjsLib.getDocument({
-                                data: crackTargetBuffer,
-                                password: passAttempt
-                            });
-                            const pdfDocObj = await loadingTask.promise;
-
-                            found = true;
-                            isCracking = false;
-
-                            logToTerminal(`🔓 SUCCESS! ENCRYPTION BYPASSED`, "text-green-400 font-bold");
-                            logToTerminal(`KEY FOUND: [${passAttempt}]`, "text-green-400 font-extrabold text-sm tracking-wider");
-
-                            try {
-                                const pdfDoc = await PDFLib.PDFDocument.load(crackTargetBuffer, { password: passAttempt });
-                                const savedBytes = await pdfDoc.save();
-                                unlockedBlob = new Blob([savedBytes], { type: 'application/pdf' });
-                                document.getElementById('download-container').classList.remove('hidden');
-                                logToTerminal("Decrypted file stream generated successfully.", "text-emerald-400");
-                            } catch (libErr) {
-                                logToTerminal("Note: PDF uses AES-256 standard encryption. Use the password above to unlock original document.", "text-yellow-400 italic");
-                            }
-
-                            document.getElementById('crack-status').innerText = "CRACKED";
-                            document.getElementById('crack-status').className = "text-xl font-black text-emerald-500 tracking-tighter uppercase";
-                            document.getElementById('crack-start-btn').innerHTML = `<i class="fa-solid fa-bullseye"></i> Launch Attack Engine`;
-                            return;
-                        } catch (err) {
-                            // Failure, keep running
-                        }
-
-                        currentNumVal++;
-                    }
+                    // Reducing balance equation: r = roi / (12 * 100); emi = (loan_amt * r * (1 + r)^m) / ((1 + r)^m - 1)
+                    const r = roi / (12 * 100);
+                    emi = (loanAmt * r * Math.pow(1 + r, m)) / (Math.pow(1 + r, m) - 1);
                 }
 
-                // yields to render thread before calling next batch
-                if (!found && isCracking) {
-                    attemptTask = setTimeout(processBatch, 0);
-                }
-            }
-
-            // Start loop
-            attemptTask = setTimeout(processBatch, 0);
+                // Append sleek preview blocks
+                metricsGrid.innerHTML += `
+                    <div class="bg-slate-950 p-4 rounded-2xl border border-slate-800 text-center animate-in zoom-in-95">
+                        <span class="text-[10px] text-slate-500 block font-bold uppercase tracking-wider">${m} Months</span>
+                        <span class="text-base font-extrabold text-yellow-400 mt-1 block">₹${Math.round(emi).toLocaleString('en-IN')}</span>
+                        <span class="text-[9px] text-slate-600 block mt-1">Total: ₹${Math.round(emi * m).toLocaleString('en-IN')}</span>
+                    </div>
+                `;
+            });
         }
 
-        function downloadUnlockedPDF() {
-            if (!unlockedBlob) return;
-            const url = URL.createObjectURL(unlockedBlob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = "Decrypted_Vikas_Portal.pdf";
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-            URL.revokeObjectURL(url);
+        // Auto trigger first load calculation state
+        calculateEmiPreview();
+
+        // ==========================================
+        // PDF REPORT COMPILATION GATEWAY (jsPDF)
+        // ==========================================
+        function generateQuotationPDF() {
+            const loanAmt = getLoanAmount();
+            const custName = document.getElementById('emi-cust-name').value.trim();
+            const vehName = document.getElementById('emi-veh-name').value.trim();
+            const roi = getVal('emi-roi');
+
+            if(!custName || loanAmt <= 0) {
+                alert("Kripya client details aur pricing values fillup karein!");
+                return;
+            }
+
+            // Create temporary address QR Code inside hidden container
+            const qrContainer = document.getElementById('hidden-qr');
+            qrContainer.innerHTML = '';
+            
+            // Standard Address mapping URL from Streamlit code
+            const addressUrl = "https://share.google/2Cs3iSUypf5Lf9PpS";
+            
+            // Build the QR Code
+            const qr = new QRCode(qrContainer, {
+                text: addressUrl,
+                width: 150,
+                height: 150,
+                colorDark : "#1e3d59",
+                colorLight : "#ffffff"
+            });
+
+            // Delay compilation slightly for QR code rendering buffer
+            setTimeout(() => {
+                const qrImageEl = qrContainer.querySelector('img');
+                if(!qrImageEl) {
+                    alert("QR Code compilation error, kripya dobara try karein!");
+                    return;
+                }
+                const qrSrc = qrImageEl.src;
+
+                // PDF compiling variables
+                const { jsPDF } = window.jspdf;
+                const doc = new jsPDF('p', 'mm', 'a4'); // Standard A4 portrait format
+
+                const istDateString = document.getElementById('live-ist-time').innerText.replace('📅 ', '');
+
+                // Background / Accents setup
+                const navyBlue = "#1e3d59";
+                const darkText = "#1a1a2e";
+
+                // --- 1. HEADER SECTION ---
+                doc.setFillColor(30, 61, 89); // Deep navy blue matching pawan auto erp
+                doc.rect(0, 0, 210, 42, 'F'); // Main Header banner
+
+                doc.setTextColor(255, 255, 255);
+                doc.setFont("helvetica", "bold");
+                doc.setFontSize(22);
+                doc.text("PAWAN AUTO FINANCE", 105, 14, { align: "center" });
+
+                doc.setFontSize(12);
+                doc.text("AGARWAL ENTERPRISE", 105, 22, { align: "center" });
+
+                doc.setFont("helvetica", "italic");
+                doc.setFontSize(6.5);
+                doc.text("SHOP NO-6, ASHIRWAD TOWNSHIP-1, NEAR WELCOME PAN CENTRE, BAMROLI ROAD, PANDESARA, SURAT", 105, 29, { align: "center" });
+
+                // --- 2. DETAILS HEADER PANEL ---
+                doc.setTextColor(0, 0, 0);
+                doc.setFont("helvetica", "bold");
+                doc.setFontSize(9.5);
+                doc.text(`CUSTOMER NAME: ${custName.toUpperCase()}`, 15, 52);
+                doc.text(`VEHICLE MODEL: ${vehName.toUpperCase() || 'NOT SPECIFIED'}`, 15, 59);
+                doc.text(`DATE: ${istDateString}`, 135, 52);
+
+                doc.setLineWidth(0.3);
+                doc.setDrawColor(200, 200, 200);
+                doc.line(15, 63, 195, 63);
+
+                // --- 3. PRICING PARAMETERS TABLE ---
+                let y = 73;
+                doc.setFontSize(10);
+
+                let parametersList = [];
+                if(emiQuotationMode === 'vehicle') {
+                    parametersList = [
+                        ["Vehicle Price", getVal('emi-price')],
+                        ["Down Payment", getVal('emi-down')],
+                        ["File Charges", getVal('emi-file')],
+                        ["Other Charges", getVal('emi-other')]
+                    ];
+                } else {
+                    parametersList = [
+                        ["Loan Amount", getVal('emi-loan-amt')],
+                        ["Ins/Pass/Trans", getVal('emi-ins-ch') + getVal('emi-pass-ch') + getVal('emi-trans-ch')],
+                        ["HP Term/Add", getVal('emi-hp-term') + getVal('emi-hp-add')],
+                        ["Other Charges", getVal('emi-oth-ch')]
+                    ];
+                }
+
+                // Draw configuration rows
+                parametersList.forEach(item => {
+                    doc.setFont("helvetica", "bold");
+                    doc.text(item[0], 25, y);
+                    doc.setFont("helvetica", "normal");
+                    doc.text(`Rs. ${item[1].toLocaleString('en-IN', {minimumFractionDigits: 2})}`, 180, y, { align: "right" });
+                    y += 7;
+                });
+
+                y += 2;
+                doc.line(15, y, 195, y);
+                y += 7;
+
+                // Net Loan Amount
+                doc.setFont("helvetica", "bold");
+                doc.text("Net Loan Amount", 25, y);
+                doc.text(`Rs. ${loanAmt.toLocaleString('en-IN', {minimumFractionDigits: 2})}`, 180, y, { align: "right" });
+
+                y += 7;
+                doc.text("Interest Rate", 25, y);
+                const typeText = selectedInterestType === 'flat' ? 'Flat Rate' : 'Reducing Balance';
+                doc.text(`${roi}% (${typeText})`, 180, y, { align: "right" });
+
+                y += 5;
+                doc.line(15, y, 195, y);
+
+                // --- 4. REPAYMENT SCHEDULE SECTION ---
+                y += 15;
+                doc.setFillColor(30, 61, 89);
+                doc.rect(15, y-6, 180, 10, 'F');
+
+                doc.setTextColor(255, 255, 255);
+                doc.setFont("helvetica", "bold");
+                doc.setFontSize(11);
+                doc.text("REPAYMENT SCHEDULE", 105, y, { align: "center" });
+
+                doc.setTextColor(0, 0, 0);
+                y += 12;
+                doc.setFontSize(9);
+                doc.text("TENURE", 20, y);
+                doc.text("MONTHLY EMI (RS)", 105, y, { align: "center" });
+                doc.text("TOTAL PAYABLE (RS)", 190, y, { align: "right" });
+
+                y += 3;
+                doc.line(15, y, 195, y);
+                y += 6;
+
+                // EMI Schedule loops
+                const plans = [5, 10, 12, 15, 18, 24, 30, 36];
+                plans.forEach(m => {
+                    let emi = 0;
+                    if(selectedInterestType === 'flat') {
+                        emi = (loanAmt + (loanAmt * roi * (m / 12) / 100)) / m;
+                    } else {
+                        const r = roi / (12 * 100);
+                        emi = (loanAmt * r * Math.pow(1 + r, m)) / (Math.pow(1 + r, m) - 1);
+                    }
+
+                    doc.setFont("helvetica", "normal");
+                    doc.text(`${m} Months Plan`, 20, y);
+                    doc.text(`${Math.round(emi).toLocaleString('en-IN')}.00`, 105, y, { align: "center" });
+                    doc.text(`${Math.round(emi * m).toLocaleString('en-IN')}.00`, 190, y, { align: "right" });
+                    y += 5.8;
+                });
+
+                // --- 5. FOOTER & COMPLIANCE ---
+                doc.line(15, 250, 195, 250);
+                
+                // Embed custom address QR code inside layout matching Python's template structure
+                doc.addImage(qrSrc, 'PNG', 15, 253, 24, 24);
+                
+                doc.setFont("helvetica", "bold");
+                doc.setFontSize(5);
+                doc.text("SCAN FOR ADDRESS", 15, 279);
+
+                doc.setFont("helvetica", "italic");
+                doc.setFontSize(7.5);
+                doc.text(`* This is a computer-generated quotation based on ${typeText.toLowerCase()}.`, 43, 256);
+
+                // Corporate Signatures
+                doc.setFont("helvetica", "bold");
+                doc.setFontSize(10);
+                doc.text("Authorized Signature", 190, 262, { align: "right" });
+                doc.setFontSize(8.5);
+                doc.text("AGARWAL ENTERPRISE", 190, 267, { align: "right" });
+
+                // Download File
+                doc.save(`Quotation_${custName.replace(/\s+/g, '_')}.pdf`);
+            }, 300);
         }
     </script>
 </body>
