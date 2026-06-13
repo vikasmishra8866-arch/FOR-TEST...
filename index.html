@@ -420,6 +420,14 @@
                                 </div>
 
                                 <div class="space-y-1">
+                                    <label class="text-[10px] font-bold text-slate-500 uppercase ml-1">Recovery Mode</label>
+                                    <select id="crack-mode" onchange="toggleModeUI()" class="w-full bg-slate-900 border border-slate-800 rounded-xl p-3 text-sm font-semibold text-yellow-400 outline-none focus:border-yellow-500">
+                                        <option value="name4">Name + 4 Digits</option>
+                                        <option value="num8">8-Digit Numbers Only</option>
+                                    </select>
+                                </div>
+
+                                <div class="space-y-1" id="crack-hint-container">
                                     <label class="text-[10px] font-bold text-slate-500 uppercase ml-1">Target Name Hint (e.g., AMAR / VIKAS)</label>
                                     <input type="text" id="crack-hint" placeholder="Vikasmishra" class="w-full bg-slate-900 border border-slate-800 rounded-xl p-4 text-sm font-mono text-yellow-400 outline-none focus:border-yellow-500">
                                 </div>
@@ -427,7 +435,7 @@
                                 <div class="flex items-center gap-3 bg-yellow-500/5 p-4 rounded-xl border border-yellow-500/10">
                                     <i class="fa-solid fa-circle-info text-yellow-500 text-sm"></i>
                                     <p class="text-[10px] text-yellow-200/80 leading-relaxed font-light">
-                                        System apke hint ke pehle 4 character lekar automatically Capital aur Small prefixes generate karega (Jaise: AMAR, amar) aur sequential batch range trial run karega.
+                                        System aapke choose kiye gaye scanning pattern ke hisaab se robust dictionary automatic run karega.
                                     </p>
                                 </div>
                             </div>
@@ -560,7 +568,7 @@
         }
 
         // ==========================================
-        // PASSWORD CRACKER ENGINE (REAL PDF-LIB BYPASS)
+        // PASSWORD CRACKER ENGINE (REAL BATCH LOGIC)
         // ==========================================
         let isCracking = false;
         let crackTargetBuffer = null;
@@ -568,10 +576,28 @@
         let attemptTask = null;
 
         const COMMON_INDIAN_NAMES = [
-            "VIKA", "AMIT", "SONU", "RAHU", "ANIL", "SUNY", "MUKU", "RAJU", "SURJ", "DIPU", 
-            "MANT", "SURA", "NEER", "DEEP", "PANK", "AKAS", "SAHI", "ROHI", "PIYU", "AMAN",
-            "ARUN", "AJAY", "VIJY", "KAPL", "MANJ", "SANT", "RAJK", "BABL", "CHOT", "VISH"
+            "AMIT", "ANIL", "ARUN", "AJAY", "ABHI", "AKAS", "AMAN", "ANSH", "ANUP", "ASHU", 
+            "DEEP", "DEVA", "DINE", "GAUR", "GURU", "HARI", "HEMA", "INDU", "JAYA", "JAYE", 
+            "JYOT", "KAMA", "KAPI", "KIRA", "KUNA", "LALU", "MADH", "MANO", "MEEN", "MOHA", 
+            "MUKA", "NEER", "NITI", "PANK", "PAWA", "PIYU", "POOJ", "PRAD", "PRAK", "PRAM", 
+            "RAHU", "RAJA", "RAJE", "RAKE", "RAMA", "RANI", "RAVI", "RISH", "ROHA", "ROHI", 
+            "SACH", "SAME", "SANJ", "SANT", "SARA", "SATI", "SHIV", "SHYA", "SONU", "SUMI", 
+            "SUNI", "SURA", "TARA", "UMES", "VIKA", "VIMA", "VINA", "VINO", "VIVE", "YOGE", 
+            "KUMA", "SING", "MISH", "SHAR", "VERM", "GUPT", "YADA", "PATE", "CHAU", "KHAN",
+            "RAWA", "NEGI", "BISH", "SAIN", "DHIL", "SIDD", "KAUR", "BALA", "ALOK", "ASIF",
+            "BABU", "BALI", "BINK", "CHET", "DAKS", "ESHA", "FAIZ", "GOPL", "HARS", "ISHA",
+            "JNAT", "KAVS", "LOKS", "MAHE", "NARE", "OMPR", "PRAT", "QASH", "RASH", "SUDH"
         ];
+
+        function toggleModeUI() {
+            const mode = document.getElementById('crack-mode').value;
+            const hintContainer = document.getElementById('crack-hint-container');
+            if (mode === 'num8') {
+                hintContainer.style.display = 'none';
+            } else {
+                hintContainer.style.display = 'block';
+            }
+        }
 
         function logToTerminal(msg, colorClass = '') {
             const terminal = document.getElementById('crack-terminal');
@@ -610,7 +636,7 @@
         function stopCracking() {
             isCracking = false;
             if (attemptTask) {
-                cancelAnimationFrame(attemptTask);
+                clearTimeout(attemptTask);
                 attemptTask = null;
             }
             document.getElementById('crack-start-btn').innerHTML = `<i class="fa-solid fa-bullseye"></i> Launch Attack Engine`;
@@ -622,28 +648,39 @@
         async function startCracking() {
             const hint = document.getElementById('crack-hint').value.trim();
             const terminal = document.getElementById('crack-terminal');
+            const mode = document.getElementById('crack-mode').value;
             
             if (!crackTargetBuffer) {
                 alert("Pehle locked PDF file upload karein!");
                 return;
             }
 
-            // Prep prefixes based on user hint (Minimum 4 character extraction logic)
             let prefixes = [];
-            if (hint.length >= 4) {
-                const sub = hint.substring(0, 4);
-                prefixes.push(sub.toUpperCase());
-                prefixes.push(sub.toLowerCase());
+            if (mode === 'name4') {
+                // Name + 4 Digits Logic mapping directly from the tested codebase
+                if (hint && hint.length >= 4) {
+                    for (let i = 0; i <= hint.length - 4; i++) {
+                        let chunk = hint.substring(i, i+4);
+                        prefixes.push(chunk);
+                        prefixes.push(chunk.toUpperCase());
+                        prefixes.push(chunk.toLowerCase());
+                    }
+                }
+                
+                // Add common names if they are not already in prefix list
+                COMMON_INDIAN_NAMES.forEach(name => {
+                    if (!prefixes.includes(name)) {
+                        prefixes.push(name);
+                    }
+                    const nameLower = name.toLowerCase();
+                    if (!prefixes.includes(nameLower)) {
+                        prefixes.push(nameLower);
+                    }
+                });
+
+                // Remove duplicates to run as fast as possible
+                prefixes = [...new Set(prefixes)];
             }
-
-            // Fallback default Indian Names database in uppercase & lowercase
-            COMMON_INDIAN_NAMES.forEach(name => {
-                prefixes.push(name.toUpperCase());
-                prefixes.push(name.toLowerCase());
-            });
-
-            // Remove any potential duplicates safely
-            prefixes = [...new Set(prefixes)];
 
             isCracking = true;
             document.getElementById('crack-start-btn').innerHTML = `<i class="fa-solid fa-circle-stop"></i> Stop Attack Engine`;
@@ -653,83 +690,132 @@
             
             terminal.innerHTML = ""; // Clear log
             logToTerminal("Booting Algorithmic PDF-Lib Recovery Module...", "text-yellow-400 font-bold");
-            logToTerminal(`Target Prefix List: [${prefixes.slice(0, 5).join(", ")}...]`, "text-slate-400");
+            if (mode === 'name4') {
+                logToTerminal(`Target Prefix List: [${prefixes.slice(0, 5).join(", ")}...]`, "text-slate-400");
+            } else {
+                logToTerminal("Target Mode: 8-Digit Sequential Numeric Scan", "text-slate-400");
+            }
             
             let totalAttempts = 0;
             let currentPrefixIdx = 0;
             let currentSuffixVal = 0;
+            let currentNumVal = 0; // For 8 digit mode
+            let found = false;
 
-            const batchSize = 120; // Number of combinations evaluated per animation tick to avoid freezing UI
+            const batchSize = 100; // Optimal non-blocking sequence size for real-time testing
             
             async function processBatch() {
-                if (!isCracking) return;
+                if (!isCracking || found) return;
 
-                if (currentPrefixIdx >= prefixes.length) {
-                    logToTerminal("Brute force failed: Target combinations exhausted without decryption match.", "text-red-500 font-bold");
-                    stopCracking();
-                    document.getElementById('crack-status').innerText = "FAILED";
-                    document.getElementById('crack-status').className = "text-xl font-black text-red-500 tracking-tighter uppercase";
-                    return;
+                if (mode === 'name4') {
+                    if (currentPrefixIdx >= prefixes.length) {
+                        logToTerminal("Brute force failed: Target combinations exhausted.", "text-red-500 font-bold");
+                        stopCracking();
+                        document.getElementById('crack-status').innerText = "FAILED";
+                        document.getElementById('crack-status').className = "text-xl font-black text-red-500 tracking-tighter uppercase";
+                        return;
+                    }
+
+                    const prefix = prefixes[currentPrefixIdx];
+                    logToTerminal(`Scanning Range: [${prefix}XXXX]...`, "text-slate-500");
+
+                    // Loop through suffix combinations
+                    for (let k = 0; k < batchSize; k++) {
+                        if (!isCracking) return;
+
+                        const padValue = currentSuffixVal.toString().padStart(4, '0');
+                        const passAttempt = prefix + padValue;
+                        totalAttempts++;
+
+                        // Periodically update attempt count in UI
+                        if (totalAttempts % 10 === 0) {
+                            document.getElementById('crack-count').innerText = totalAttempts;
+                        }
+
+                        try {
+                            // Actual PDFLib Decryption verification with deep save check
+                            const pdfDoc = await PDFLib.PDFDocument.load(crackTargetBuffer, { password: passAttempt });
+                            const savedBytes = await pdfDoc.save();
+                            unlockedBlob = new Blob([savedBytes], { type: 'application/pdf' });
+
+                            found = true;
+                            isCracking = false;
+
+                            logToTerminal(`🔓 SUCCESS! ENCRYPTION BYPASSED`, "text-green-400 font-bold");
+                            logToTerminal(`KEY FOUND: [${passAttempt}]`, "text-green-400 font-extrabold text-sm tracking-wider");
+
+                            document.getElementById('crack-status').innerText = "CRACKED";
+                            document.getElementById('crack-status').className = "text-xl font-black text-emerald-500 tracking-tighter uppercase";
+                            document.getElementById('crack-start-btn').innerHTML = `<i class="fa-solid fa-bullseye"></i> Launch Attack Engine`;
+                            document.getElementById('download-container').classList.remove('hidden');
+                            return;
+                        } catch (err) {
+                            // Failure, keep running
+                        }
+
+                        currentSuffixVal++;
+                        if (currentSuffixVal > 9999) {
+                            currentSuffixVal = 0;
+                            currentPrefixIdx++;
+                            break; // yields execution frame to change prefix
+                        }
+                    }
+                } else {
+                    // 8-Digit Numbers Only Mode Logic
+                    if (currentNumVal >= 100000000) {
+                        logToTerminal("Brute force failed: Target combinations exhausted.", "text-red-500 font-bold");
+                        stopCracking();
+                        document.getElementById('crack-status').innerText = "FAILED";
+                        document.getElementById('crack-status').className = "text-xl font-black text-red-500 tracking-tighter uppercase";
+                        return;
+                    }
+
+                    for (let k = 0; k < batchSize; k++) {
+                        if (!isCracking) return;
+
+                        const passAttempt = currentNumVal.toString().padStart(8, '0');
+                        totalAttempts++;
+
+                        if (totalAttempts % 10 === 0) {
+                            document.getElementById('crack-count').innerText = totalAttempts;
+                        }
+
+                        if (totalAttempts % 1500 === 0) {
+                            logToTerminal(`Testing Sequence: [${passAttempt}]...`, "text-slate-500");
+                        }
+
+                        try {
+                            const pdfDoc = await PDFLib.PDFDocument.load(crackTargetBuffer, { password: passAttempt });
+                            const savedBytes = await pdfDoc.save();
+                            unlockedBlob = new Blob([savedBytes], { type: 'application/pdf' });
+
+                            found = true;
+                            isCracking = false;
+
+                            logToTerminal(`🔓 SUCCESS! ENCRYPTION BYPASSED`, "text-green-400 font-bold");
+                            logToTerminal(`KEY FOUND: [${passAttempt}]`, "text-green-400 font-extrabold text-sm tracking-wider");
+
+                            document.getElementById('crack-status').innerText = "CRACKED";
+                            document.getElementById('crack-status').className = "text-xl font-black text-emerald-500 tracking-tighter uppercase";
+                            document.getElementById('crack-start-btn').innerHTML = `<i class="fa-solid fa-bullseye"></i> Launch Attack Engine`;
+                            document.getElementById('download-container').classList.remove('hidden');
+                            return;
+                        } catch (err) {
+                            // Failure, keep running
+                        }
+
+                        currentNumVal++;
+                    }
                 }
 
-                const prefix = prefixes[currentPrefixIdx];
-                let isBatchMatchFound = false;
-
-                // Test a batch sequentially
-                for (let k = 0; k < batchSize; k++) {
-                    const padValue = currentSuffixVal.toString().padStart(4, '0');
-                    const passAttempt = prefix + padValue;
-                    totalAttempts++;
-
-                    // Update UI stats periodically
-                    if (totalAttempts % 10 === 0) {
-                        document.getElementById('crack-count').innerText = totalAttempts;
-                    }
-
-                    if (totalAttempts % 250 === 0) {
-                        logToTerminal(`Attempting range: [${passAttempt}] -> Refused`, "text-slate-500");
-                    }
-
-                    // Try loading PDF with the computed candidate password using PDFLib
-                    try {
-                        const pdfDoc = await PDFLib.PDFDocument.load(crackTargetBuffer, { password: passAttempt });
-                        
-                        // If load succeeds, decryption has passed!
-                        isBatchMatchFound = true;
-                        isCracking = false;
-                        
-                        logToTerminal(`🔓 SUCCESS! ENCRYPTION BYPASSED SUCCESSFULLY`, "text-green-400 font-bold");
-                        logToTerminal(`DECRYPTED PASSWORD KEY FOUND: [${passAttempt}]`, "text-green-400 font-extrabold text-sm tracking-wider");
-                        logToTerminal("Exporting decrypted PDF stream to local disk buffers...", "text-slate-300");
-
-                        // Save the unlocked document stream
-                        const savedBytes = await pdfDoc.save();
-                        unlockedBlob = new Blob([savedBytes], { type: 'application/pdf' });
-
-                        document.getElementById('crack-status').innerText = "CRACKED";
-                        document.getElementById('crack-status').className = "text-xl font-black text-emerald-500 tracking-tighter uppercase";
-                        document.getElementById('crack-start-btn').innerHTML = `<i class="fa-solid fa-bullseye"></i> Launch Attack Engine`;
-                        document.getElementById('download-container').classList.remove('hidden');
-                        break;
-                    } catch (err) {
-                        // PDF-Lib throws an error if decryption/password match fails, skip and keep checking
-                    }
-
-                    currentSuffixVal++;
-                    if (currentSuffixVal > 9999) {
-                        currentSuffixVal = 0;
-                        currentPrefixIdx++;
-                        break;
-                    }
-                }
-
-                if (!isBatchMatchFound && isCracking) {
-                    attemptTask = requestAnimationFrame(processBatch);
+                // yields to render thread before calling next batch
+                if (!found && isCracking) {
+                    attemptTask = setTimeout(processBatch, 0);
                 }
             }
 
-            // Start the non-blocking engine loop
-            attemptTask = requestAnimationFrame(processBatch);
+            // Start loop
+            attemptTask = setTimeout(processBatch, 0);
         }
 
         function downloadUnlockedPDF() {
