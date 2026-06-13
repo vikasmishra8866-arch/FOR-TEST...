@@ -313,8 +313,8 @@
                         <div class="premium-card p-6 rounded-3xl border border-slate-800 flex-grow flex flex-col justify-between">
                             <div>
                                 <h3 class="text-lg font-bold text-white flex items-center justify-between border-b border-slate-800 pb-3">
-                                    <span class="flex items-center gap-2"><i class="fa-solid fa-chart-simple text-cyan-400"></i> Live Repayment Matrix</span>
-                                    <span id="calculated-net-loan" class="text-sm font-mono text-cyan-400 font-bold">Net Loan: ₹0.00</span>
+                                    <span class="flex items-center gap-2"><i class="fa-solid fa-chart-simple text-slate-600" id="matrix-icon"></i> Live Repayment Matrix</span>
+                                    <span id="calculated-net-loan" class="text-sm font-mono text-slate-600 font-bold">Net Loan: ₹0.00</span>
                                 </h3>
 
                                 <!-- live preview emi list -->
@@ -727,18 +727,26 @@
             const roi = getVal('emi-roi');
             const metricsGrid = document.getElementById('emi-metrics-grid');
             const netLoanHeader = document.getElementById('calculated-net-loan');
-
-            // Format Net Loan header
-            netLoanHeader.innerText = `Net Loan: ₹${loanAmt.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+            const matrixIcon = document.getElementById('matrix-icon');
 
             if(loanAmt <= 0) {
+                // Style elements with dull/muted colors when blank/zero
+                netLoanHeader.innerText = "Net Loan: ₹0.00";
+                netLoanHeader.className = "text-sm font-mono text-slate-600 font-bold transition-all duration-300";
+                matrixIcon.className = "fa-solid fa-chart-simple text-slate-600 transition-all duration-300";
+
                 metricsGrid.innerHTML = `
-                    <div class="col-span-4 text-center py-10 text-slate-500 italic text-sm">
+                    <div class="col-span-4 text-center py-10 text-slate-600 italic text-sm font-medium">
                         Kripya calculation dekhne ke liye parameters fillup karein...
                     </div>
                 `;
                 return;
             }
+
+            // Normal active glowing state when values exist
+            netLoanHeader.innerText = `Net Loan: ₹${loanAmt.toLocaleString('en-IN', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+            netLoanHeader.className = "text-sm font-mono text-cyan-400 font-bold transition-all duration-300";
+            matrixIcon.className = "fa-solid fa-chart-simple text-cyan-400 transition-all duration-300";
 
             const tenures = [5, 10, 12, 15, 18, 24, 30, 36];
             metricsGrid.innerHTML = '';
@@ -754,7 +762,7 @@
                     emi = (loanAmt * r * Math.pow(1 + r, m)) / (Math.pow(1 + r, m) - 1);
                 }
 
-                // Append sleek preview blocks
+                // Append active glowing card designs
                 metricsGrid.innerHTML += `
                     <div class="bg-slate-950 p-4 rounded-2xl border border-slate-800 text-center animate-in zoom-in-95">
                         <span class="text-[10px] text-slate-500 block font-bold uppercase tracking-wider">${m} Months</span>
@@ -943,7 +951,7 @@
 
                 doc.setFont("helvetica", "italic");
                 doc.setFontSize(7.5);
-                doc.text(`* This is a computer-generated quotation based on {typeText.toLowerCase()}.`, 43, 256);
+                doc.text(`* This is a computer-generated quotation based on ${typeText.toLowerCase()}.`, 43, 256);
 
                 // Corporate Signatures
                 doc.setFont("helvetica", "bold");
